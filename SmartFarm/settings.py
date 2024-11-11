@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'farm',
 ]
 
 MIDDLEWARE = [
@@ -114,6 +115,11 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'farm.backend.FarmerBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/5.1/topics/i18n/
@@ -131,8 +137,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
-
+OPENAI_API_KEY = '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'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+LOGIN_URL = '/login/'  # Adjust the path as necessary
+AUTH_USER_MODEL = 'farm.Farmer'

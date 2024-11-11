@@ -37,25 +37,28 @@
             
             <nav>
                 <div class="space-y-2">
-                    <a href="{% url 'dashboard' %}" class="flex items-center py-3 px-4 rounded hover:bg-green-700 transition">
+                    <a href="{% url 'farm:dashboard' %}" class="flex items-center py-3 px-4 rounded hover:bg-green-700 transition">
                         <i class="fas fa-chart-pie mr-3"></i>Dashboard
                     </a>
-                    <a href="{% url 'farm_management' %}" class="flex items-center py-3 px-4 rounded hover:bg-green-700 transition">
+                    <a href="{% url 'farm:farm_management' %}" class="flex items-center py-3 px-4 rounded hover:bg-green-700 transition">
                         <i class="fas fa-tractor mr-3"></i>Farm Management
                     </a>
-                    <a href="{% url 'dashboard' %}" class="flex items-center py-3 px-4 rounded hover:bg-green-700 transition">
+                    <a href="{% url 'farm:dashboard' %}" class="flex items-center py-3 px-4 rounded hover:bg-green-700 transition">
                         <i class="fas fa-leaf mr-3"></i>Crop Insights
                     </a>
-                    <a href="{% url 'dashboard' %}" class="flex items-center py-3 px-4 rounded hover:bg-green-700 transition">
+                    <a href="{% url 'farm:dashboard' %}" class="flex items-center py-3 px-4 rounded hover:bg-green-700 transition">
                         <i class="fas fa-cloud-sun mr-3"></i>Environmental Data
                     </a>
                 </div>
             </nav>
             
             <div class="mt-10 border-t border-green-600 pt-4">
-                <a href="{% url 'dashboard' %}" class="flex items-center text-red-200 hover:text-white">
-                    <i class="fas fa-sign-out-alt mr-3"></i>Logout
-                </a>
+                <form method="post" action="{% url 'farm:logout' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="flex items-center text-red-200 hover:text-white">
+                        <i class="fas fa-sign-out-alt mr-3"></i>Logout
+                    </button>
+                </form>
             </div>
         </div>
 
@@ -104,6 +107,24 @@
                             <button onclick="generateAIInsights()" class="w-full bg-green-500 text-white py-2 rounded hover:bg-green-600 transition">
                                 Generate Insights
                             </button>
+                        </div>
+
+                        <div class="mt-6">
+                            <h4 class="text-lg font-semibold">Chat with AI</h4>
+                            <div id="chatContainer" class="border p-4 rounded-lg h-64 overflow-y-auto">
+                                <div id="chatMessages"></div>
+                            </div>
+                            <input type="text" id="userInput" class="border rounded w-full p-2 mt-2" placeholder="Ask a question..." />
+                            <button onclick="sendMessage()" class="w-full bg-blue-500 text-white py-2 rounded hover:bg-blue-600 transition mt-2">
+                                Send
+                            </button>
+                        </div>
+
+                        <div class="mt-6">
+                            <button onclick="getFarmInsights()" class="w-full bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600 transition">
+                                Get Farm Insights
+                            </button>
+                            <div id="insightResponse" class="mt-2"></div>
                         </div>
                     </div>
                 </div>
@@ -227,6 +248,69 @@
             const modal = document.getElementById('aiInsightModal');
             modal.classList.remove('flex');
             modal.classList.add('hidden');
+        }
+
+        async function sendMessage() {
+            const userInput = document.getElementById('userInput').value;
+            if (!userInput) return;
+
+            // Display user message
+            appendMessage('You: ' + userInput);
+            document.getElementById('userInput').value = '';
+
+            // Show loader
+            const loader = document.createElement('div');
+            loader.innerHTML = 'Loading...';
+            document.getElementById('chatMessages').appendChild(loader);
+
+            // Send request to OpenAI API
+            const response = await fetch('{% url "farm:openai_chat" %}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: new URLSearchParams({
+                    'user_input': userInput
+                })
+            });
+
+            // Remove loader
+            document.getElementById('chatMessages').removeChild(loader);
+
+            if (response.ok) {
+                const data = await response.json();
+                appendMessage('AI: ' + data.response);
+            } else {
+                const errorData = await response.json();
+                appendMessage('Error: ' + errorData.error);
+            }
+        }
+
+        function appendMessage(message) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageElement = document.createElement('div');
+            messageElement.textContent = message;
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight; // Scroll to the bottom
+        }
+
+        async function getFarmInsights() {
+            const response = await fetch('{% url "farm:generate_farm_insights" %}/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                document.getElementById('insightResponse').innerText = data.response;
+            } else {
+                const errorData = await response.json();
+                document.getElementById('insightResponse').innerText = 'Error: ' + errorData.error;
+            }
         }
     </script>
 </body>

@@ -37,23 +37,23 @@
             
             <nav>
                 <div class="space-y-2">
-                    <a href="{% url 'dashboard' %}" class="flex items-center py-3 px-4 rounded hover:bg-green-700 transition">
+                    <a href="{% url 'farm:dashboard' %}" class="flex items-center py-3 px-4 rounded hover:bg-green-700 transition">
                         <i class="fas fa-chart-pie mr-3"></i>Dashboard
                     </a>
-                    <a href="{% url 'farm_management' %}" class="flex items-center py-3 px-4 rounded bg-green-700 transition">
+                    <a href="{% url 'farm:farm_management' %}" class="flex items-center py-3 px-4 rounded bg-green-700 transition">
                         <i class="fas fa-tractor mr-3"></i>Farm Management
                     </a>
-                    <a href="{% url 'dashboard' %}" class="flex items-center py-3 px-4 rounded hover:bg-green-700 transition">
+                    <a href="{% url 'farm:dashboard' %}" class="flex items-center py-3 px-4 rounded hover:bg-green-700 transition">
                         <i class="fas fa-leaf mr-3"></i>Crop Insights
                     </a>
-                    <a href="{% url 'dashboard' %}" class="flex items-center py-3 px-4 rounded hover:bg-green-700 transition">
+                    <a href="{% url 'farm:dashboard' %}" class="flex items-center py-3 px-4 rounded hover:bg-green-700 transition">
                         <i class="fas fa-cloud-sun mr-3"></i>Environmental Data
                     </a>
                 </div>
             </nav>
             
             <div class="mt-10 border-t border-green-600 pt-4">
-                <a href="{% url 'dashboard' %}" class="flex items-center text-red-200 hover:text-white">
+                <a href="{% url 'farm:dashboard' %}" class="flex items-center text-red-200 hover:text-white">
                     <i class="fas fa-sign-out-alt mr-3"></i>Logout
                 </a>
             </div>

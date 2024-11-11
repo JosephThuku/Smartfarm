@@ -10,15 +10,34 @@ from datetime import datetime
 import logging
 
 # users/views.py
+from django.shortcuts import render, redirect
+from django.contrib.auth import login
+from django.contrib import messages
+from django.views.generic import CreateView
+from django.urls import reverse_lazy
+from .forms import FarmerSignUpForm
+from .models import Farmer
+from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
+from django.contrib.auth.views import LoginView
+from django.contrib.auth import authenticate
 
 def login_view(request):
     return render(request, 'users/login.html')
 
 def signup_view(request):
-    return render(request, 'users/signup.html')
+    if request.method == 'POST':
+        form = FarmerSignUpForm(request.POST)
+        if form.is_valid():
+            form.save()
+            # Redirect to a success page or login the user
+    else:
+        form = FarmerSignUpForm()
+    
+    return render(request, 'users/signup.html', {'form': form})
 
 # farm management
+@login_required
 def dashboard_view(request):
     # @Todo by @Joe and Josephine to implement the logic for the dashboard which wiil:
     # 1. Get the farmer details
@@ -224,3 +243,107 @@ def farm_management_view(request):
 #             return Response({
 #                 'error': 'Failed to generate analytics'
 #             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+class FarmerSignUpView(CreateView):
+    model = Farmer
+    form_class = FarmerSignUpForm
+    template_name = 'users/signup.html'
+    success_url = reverse_lazy('farm:dashboard')
+
+    def form_valid(self, form):
+        response = super().form_valid(form)
+        user = form.save()
+        login(self.request, user)
+        messages.success(self.request, 'Welcome to SmartFarm! Please complete your profile.')
+        return response
+
+    def form_invalid(self, form):
+        messages.error(self.request, 'Please correct the errors below.')
+        return super().form_invalid(form)
+
+class CustomLoginView(LoginView):
+    print(f"Hello from the custom login view")
+    template_name = 'users/login.html'
+    redirect_authenticated_user = True
+
+    def form_valid(self, form):
+        messages.success(self.request, 'Login successful! Redirecting to dashboard.')
+        return super().form_valid(form)  # Redirects to the dashboard automatically
+
+    def form_invalid(self, form):
+        messages.error(self.request, 'Invalid username or password.')
+        return super().form_invalid(form)
+        
+    def get_success_url(self):
+        return reverse_lazy('farm:dashboard')
+
+    def get_user(self):
+        # Override to authenticate using the Farmer model
+        username = self.request.POST.get('username')
+        password = self.request.POST.get('password')
+        print(f"Hello the username is: {username} and the password is : {password}")
+        return authenticate(self.request, username=username, password=password)
+
+import openai
+from django.http import JsonResponse
+from django.views import View
+from django.conf import settings
+
+# Ensure you have your OpenAI API key set in your settings
+openai.api_key = settings.OPENAI_API_KEY
+
+class OpenAIChatView(View):
+    def post(self, request):
+        user_input = request.POST.get('user_input')
+        
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",  # or any other model you want to use
+                messages=[
+                    {"role": "user", "content": user_input}
+                ]
+            )
+            ai_response = response['choices'][0]['message']['content']
+            return JsonResponse({'response': ai_response})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+
+class GenerateFarmInsightsView(View):
+    def post(self, request):
+        # Sample farm data
+        sample_farm_data = {
+            "crop_type": "corn",
+            "area": "50 acres",
+            "soil_type": "loamy",
+            "irrigation": "drip",
+            "fertilizer_used": "NPK",
+            "pests": ["aphids", "corn borers"],
+            "weather_conditions": "sunny with occasional rain",
+        }
+
+        # Construct the prompt for the AI
+        prompt = (
+            "You are an agriculture expert. Based on the following farm data, "
+            "provide insights and recommendations:\n"
+            f"Crop Type: {sample_farm_data['crop_type']}\n"
+            f"Area: {sample_farm_data['area']}\n"
+            f"Soil Type: {sample_farm_data['soil_type']}\n"
+            f"Irrigation Method: {sample_farm_data['irrigation']}\n"
+            f"Fertilizer Used: {sample_farm_data['fertilizer_used']}\n"
+            f"Pests: {', '.join(sample_farm_data['pests'])}\n"
+            f"Weather Conditions: {sample_farm_data['weather_conditions']}\n"
+            "Provide actionable insights and recommendations."
+        )
+
+        try:
+            response = openai.ChatCompletion.create(
+                model="gpt-3.5-turbo",  # or any other model you want to use
+                messages=[
+                    {"role": "user", "content": prompt}
+                ]
+            )
+            ai_response = response['choices'][0]['message']['content']
+            return JsonResponse({'response': ai_response})
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)

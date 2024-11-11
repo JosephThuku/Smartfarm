@@ -7,6 +7,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SmartFarm - Login</title>
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     <style>
         body {
             display: flex;
@@ -82,13 +83,67 @@
         a:hover {
             text-decoration: underline;
         }
+        .loader {
+            display: none;
+            border: 16px solid #f3f3f3;
+            border-radius: 50%;
+            border-top: 16px solid #3498db;
+            width: 120px;
+            height: 120px;
+            animation: spin 2s linear infinite;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgb(0,0,0);
+            background-color: rgba(0,0,0,0.4);
+            padding-top: 60px;
+        }
+
+        .modal-content {
+            background-color: #fefefe;
+            margin: 5% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="login-box">
             <h2>Login to SmartFarm</h2>
-            <form method="post" action="{% url 'login' %}">
+            <form method="post" action="{% url 'farm:login' %}" id="loginForm">
                 {% csrf_token %}
                 <div class="form-group">
                     <label for="username">Username</label>
@@ -98,11 +153,58 @@
                     <label for="password">Password</label>
                     <input type="password" id="password" name="password" required>
                 </div>
-                <a href="{% url 'dashboard' %}">Login</a>
-                <!-- <button type="submit" class="btn">Login</button> -->
-                <p>Don’t have an account? <a href="{% url 'signup' %}">Sign up</a></p>
+                <button type="submit" class="btn">Login</button>
             </form>
+            <p>Don't have an account? <a href="{% url 'farm:signup' %}">Register</a></p>            
+            <!-- <form method="post" action="{% url 'farm:login' %}" id="loginForm">
+                {% csrf_token %}
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <button type="submit" class="btn">Login</button>
+            </form> -->
         </div>
     </div>
+
+    <div id="loader" class="loader"></div>
+
+    <div id="errorModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <p>Invalid username or password.</p>
+            <p>The password you passed is: {{ password }}</p>
+            <p>The username you passed is: {{ username }}</p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('loginForm').onsubmit = function() {
+            document.getElementById('loader').style.display = 'block';
+        };
+
+        var modal = document.getElementById('errorModal');
+        var span = document.getElementsByClassName("close")[0];
+
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert {{ message.tags }}">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
 </body>
 </html>
