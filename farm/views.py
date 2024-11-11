@@ -291,7 +291,8 @@ from django.conf import settings
 
 # Initialize the Hugging Face model for text generation
 # You can choose a model that fits your needs, e.g., "gpt2" or "distilgpt2"
-chatbot = pipeline("text-generation", model="gpt2")  # or any other model you want to use
+# chatbot = pipeline("text-generation", model="gpt2")  # or any other model you want to use
+chatbot = pipeline("text-generation", model="gpt2", pad_token_id=50256)  # Use the appropriate padding token ID
 
 class OpenAIChatView(View):
     def post(self, request):
