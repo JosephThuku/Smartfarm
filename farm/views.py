@@ -284,30 +284,26 @@ class CustomLoginView(LoginView):
         print(f"Hello the username is: {username} and the password is : {password}")
         return authenticate(self.request, username=username, password=password)
 
-import openai
+from transformers import pipeline
 from django.http import JsonResponse
 from django.views import View
 from django.conf import settings
 
-# Ensure you have your OpenAI API key set in your settings
-openai.api_key = settings.OPENAI_API_KEY
+# Initialize the Hugging Face model for text generation
+# You can choose a model that fits your needs, e.g., "gpt2" or "distilgpt2"
+chatbot = pipeline("text-generation", model="gpt2")  # or any other model you want to use
 
 class OpenAIChatView(View):
     def post(self, request):
         user_input = request.POST.get('user_input')
         
         try:
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",  # or any other model you want to use
-                messages=[
-                    {"role": "user", "content": user_input}
-                ]
-            )
-            ai_response = response['choices'][0]['message']['content']
+            # Generate a response using the Hugging Face model
+            response = chatbot(user_input, max_length=100, num_return_sequences=1)
+            ai_response = response[0]['generated_text']
             return JsonResponse({'response': ai_response})
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)
-
 
 class GenerateFarmInsightsView(View):
     def post(self, request):
@@ -337,13 +333,9 @@ class GenerateFarmInsightsView(View):
         )
 
         try:
-            response = openai.ChatCompletion.create(
-                model="gpt-3.5-turbo",  # or any other model you want to use
-                messages=[
-                    {"role": "user", "content": prompt}
-                ]
-            )
-            ai_response = response['choices'][0]['message']['content']
+            # Generate a response using the Hugging Face model
+            response = chatbot(prompt, max_length=150, num_return_sequences=1)
+            ai_response = response[0]['generated_text']
             return JsonResponse({'response': ai_response})
         except Exception as e:
             return JsonResponse({'error': str(e)}, status=500)

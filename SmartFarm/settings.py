@@ -137,7 +137,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
 STATIC_URL = 'static/'
-OPENAI_API_KEY = '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'
+OPENAI_API_KEY = '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'
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
